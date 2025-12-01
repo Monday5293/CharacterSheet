@@ -1,0 +1,823 @@
+.covert-agent-sheet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+}
+
+.section {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section h2 {
+  color: #00ff88;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #00ff88;
+  padding-bottom: 5px;
+  font-size: 1.2em;
+}
+
+/* ========== 特工档案布局 ========== */
+/* 特工档案主容器：上下结构 */
+.agent-info-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 上层：头像和个人信息左右排列 */
+.agent-info-top {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* 通用框样式 - 可调整 flex-basis 或 width 来改变大小 */
+.agent-info-box {
+  background: rgba(0, 255, 136, 0.05);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+/* 第一个框：头像框 - 可调整宽度/flex-basis */
+.agent-info-box.avatar-box-container {
+  flex: 0 0 160px;
+  /* 调整大小：修改 160px 的值，或改为 flex: 1 按比例分配 */
+  display: flex;
+  flex-direction: column;
+}
+
+.avatar-column {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.avatar-box {
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.25);
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.avatar-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  color: #ddd;
+  font-size: 0.9em;
+  text-align: center;
+  padding: 8px;
+}
+
+/* 第二个框：个人信息框 - 可调整宽度/flex-basis */
+.agent-info-box.personal-info-box {
+  flex: 1;
+  /* 调整大小：修改 flex 值，如 flex: 2 表示占 2 倍空间 */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 第三个框：黑市币和醉意值框 - 占满宽度 */
+.agent-info-box.coins-status-box {
+  width: 100%;
+  /* 调整大小：修改 flex 值或宽度 */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ========== 字段样式 ========== */
+
+.section h3 {
+  color: #ff6b6b;
+  margin: 15px 0 10px 0;
+  font-size: 1em;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 0;
+  align-items: flex-end;
+}
+
+.input-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #ffd166;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #00ff88;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 14px;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline: none;
+  border-color: #ff6b6b;
+  box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+}
+
+/* 属性网格 */
+.attributes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.attribute {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.attribute label {
+  color: #00ff88;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.attribute-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.attribute-value {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ffd166;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* 社会属性竖向列表 */
+.social-attributes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.social-attribute-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.social-attribute-row .attr-name {
+  min-width: 60px;
+  color: #00ff88;
+  font-weight: bold;
+  font-size: 0.95em;
+}
+
+.social-attribute-row .attr-description {
+  flex: 1;
+  min-width: 150px;
+}
+
+.social-attribute-row .attr-description input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #00ff88;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 0.9em;
+}
+
+.social-attribute-row .attr-description input:focus {
+  outline: none;
+  border-color: #ffd166;
+  box-shadow: 0 0 5px rgba(255, 209, 102, 0.5);
+}
+
+.social-attribute-row .attr-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+}
+
+.social-attribute-row .attr-controls button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.25);
+  color: #00ff88;
+  border: 1px solid rgba(0,255,136,0.2);
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.12s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.social-attribute-row .attr-controls button:hover:not(:disabled) {
+  background: #00ff88;
+  color: #000;
+}
+
+.social-attribute-row .attr-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.social-attribute-row .attr-value {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #ffd166;
+  min-width: 25px;
+  text-align: center;
+}
+
+.social-attribute-row .attr-level {
+  min-width: 50px;
+  color: #ff6b6b;
+  font-weight: bold;
+  text-align: center;
+  font-size: 0.9em;
+}
+
+/* 酒类代币样式（2x2 网格，按钮在右侧） */
+.alcohol-tokens h3 {
+  margin-top: 12px;
+  margin-bottom: 10px;
+  color: #ffd166;
+  font-size: 1em;
+}
+
+.tokens-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.token-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(0, 255, 136, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(0,255,136,0.14);
+}
+
+.token-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 28px;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
+}
+
+.token-input-wrap {
+  flex: 1;
+}
+
+.token-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #fff;
+  background: rgba(0,0,0,0.45);
+  font-weight: bold;
+  text-align: center; /* 居中数字 */
+}
+
+/* 隐藏 number 输入框自带的上下微调按钮 */
+.token-input::-webkit-outer-spin-button,
+.token-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.token-input {
+  -moz-appearance: textfield;
+}
+
+.token-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.token-controls button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.25);
+  color: #00ff88;
+  border: 1px solid rgba(0,255,136,0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.token-value {
+  min-width: 28px;
+  text-align: center;
+  color: #ffd166;
+  font-weight: bold;
+}
+
+.token-red { background: #ff6b6b; }
+.token-yellow { background: #ffd166; }
+.token-blue { background: #6bc1ff; }
+.token-green { background: #8aff9a; }
+
+.token-input.token-red { border-color: #ff6b6b; }
+.token-input.token-yellow { border-color: #ffd166; }
+.token-input.token-blue { border-color: #6bc1ff; }
+.token-input.token-green { border-color: #8aff9a; }
+
+.alcohol-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin-top: 12px;
+  border-radius: 1px;
+}
+
+/* 调整酒类代币标题与社会属性同级样式并添加横线 */
+.alcohol-tokens h3 {
+  color: #00ff88;
+  margin: 0 0 10px 0;
+  font-size: 1.2em;
+  border-bottom: 2px solid #00ff88;
+  padding-bottom: 6px;
+}
+
+/* ========== 酒类展示（横跨两列） ========== */
+.wine-section {
+  grid-column: 1 / -1; /* 横跨两列 */
+}
+
+.bottle-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.bottle-item {
+  position: relative;
+  height: 160px; /* 总高度，可按需调整 */
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0,255,136,0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.bottle-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80%; /* 占 4/5 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.25);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.bottle-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bottle-placeholder {
+  color: #ddd;
+  font-size: 0.9em;
+  text-align: center;
+  padding: 8px;
+}
+
+.bottle-name {
+  position: relative;
+  z-index: 10; /* 名称始终在上方 */
+  flex: 0 0 20%; /* 占 1/5 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #ffd166;
+  background: rgba(0,0,0,0.65);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+@media (max-width: 900px) {
+  .bottle-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .bottle-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* 通用数值输入带右侧增减按钮 */
+.number-with-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.numeric-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #fff;
+  background: rgba(0,0,0,0.45);
+  font-weight: bold;
+  text-align: center;
+}
+
+/* 隐藏 number 输入框自带的上下微调按钮 */
+.numeric-input::-webkit-outer-spin-button,
+.numeric-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.numeric-input {
+  -moz-appearance: textfield;
+}
+
+.token-controls button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.25);
+  color: #00ff88;
+  border: 1px solid rgba(0,255,136,0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+/* 健康状况 */
+.health-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.health-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.health-item label {
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+.health-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.health-controls input {
+  width: 60px;
+  padding: 5px;
+  border: 1px solid #ff6b6b;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  text-align: center;
+}
+
+.health-controls span {
+  color: #888;
+}
+
+/* 列表样式 */
+.specialty-list,
+.equipment-category ul {
+  list-style: none;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.specialty-list li,
+.equipment-category li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  border-left: 3px solid #00ff88;
+}
+
+.specialty-list li button {
+  background: #ff6b6b;
+  border: none;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.specialty-list li button:hover {
+  background: #ff5252;
+}
+
+/* 装备分类 */
+.equipment-category {
+  margin-bottom: 20px;
+}
+
+.equipment-category:last-child {
+  margin-bottom: 0;
+}
+
+.equipment-category ul {
+  max-height: 100px;
+}
+
+.equipment-category li {
+  border-left-color: #4ecdc4;
+}
+
+/* 按钮样式 */
+button {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #00ff88, #00cc6a);
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #00cc6a, #00aa55);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+}
+
+button:disabled {
+  background: #666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 输入框样式 */
+input[type="text"],
+input[type="number"] {
+  padding: 8px 12px;
+  border: 1px solid #00ff88;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 14px;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: #ff6b6b;
+  box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+}
+
+/* 选择框样式 */
+select {
+  padding: 8px 12px;
+  border: 1px solid #00ff88;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+select:focus {
+  outline: none;
+  border-color: #ff6b6b;
+  box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .covert-agent-sheet {
+    grid-template-columns: 1fr;
+  }
+  
+  .attributes-grid,
+  .health-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .input-row {
+    flex-direction: column;
+  }
+  
+  .attribute-controls {
+    gap: 5px;
+  }
+}
+
+/* 滚动条样式 */
+.specialty-list::-webkit-scrollbar,
+.equipment-category ul::-webkit-scrollbar {
+  width: 6px;
+}
+
+.specialty-list::-webkit-scrollbar-track,
+.equipment-category ul::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.specialty-list::-webkit-scrollbar-thumb,
+.equipment-category ul::-webkit-scrollbar-thumb {
+  background: #00ff88;
+  border-radius: 3px;
+}
+
+/* ========== 头像裁剪界面 ========== */
+.avatar-cropper-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.cropper-container {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00ff88;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 90vw;
+}
+
+.cropper-preview {
+  position: relative;
+  width: 400px;
+  height: 600px;
+  overflow: hidden;
+  border: 1px solid #00ff88;
+  background: #000;
+}
+
+.cropper-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crop-box {
+  position: absolute;
+  border: 2px solid #ffd166;
+  background: rgba(255, 209, 102, 0.1);
+  cursor: move;
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+}
+
+.crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #ffd166;
+  border: 1px solid white;
+  border-radius: 50%;
+}
+
+.crop-handle-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nwse-resize;
+}
+
+.crop-handle-ne {
+  top: -6px;
+  right: -6px;
+  cursor: nesw-resize;
+}
+
+.crop-handle-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: nesw-resize;
+}
+
+.crop-handle-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+}
+
+.cropper-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.crop-confirm,
+.crop-cancel {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.crop-confirm {
+  background: #00ff88;
+  color: #000;
+}
+
+.crop-confirm:hover {
+  background: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.crop-cancel {
+  background: #ff6b6b;
+  color: white;
+}
+
+.crop-cancel:hover {
+  background: #ff5252;
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
