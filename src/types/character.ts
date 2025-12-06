@@ -35,7 +35,26 @@ export interface CovertAgent {
     blue: number
     green: number
   }
-  
+
+  // 职业
+  profession: {
+    name: string
+    adjectives: string[]
+  }
+
+  // 背包
+  backpack: string
+
+  // 技能形容词
+  skillAdjectives: string[]
+
+  // 名词
+  nouns: string[]
+
+  // 背景
+  background: string
+  backgroundImage: string
+
   // 健康状况
   health: {
     current: number

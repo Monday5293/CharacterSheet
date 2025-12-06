@@ -511,99 +511,6 @@
   justify-content: center;
   font-size: 16px;
 }
-/* 健康状况 */
-.health-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-.health-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.health-item label {
-  color: #ff6b6b;
-  font-weight: bold;
-}
-
-.health-controls {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.health-controls input {
-  width: 60px;
-  padding: 5px;
-  border: 1px solid #ff6b6b;
-  border-radius: 5px;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  text-align: center;
-}
-
-.health-controls span {
-  color: #888;
-}
-
-/* 列表样式 */
-.specialty-list,
-.equipment-category ul {
-  list-style: none;
-  max-height: 150px;
-  overflow-y: auto;
-  margin-top: 10px;
-}
-
-.specialty-list li,
-.equipment-category li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  margin-bottom: 5px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  border-left: 3px solid #00ff88;
-}
-
-.specialty-list li button {
-  background: #ff6b6b;
-  border: none;
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.specialty-list li button:hover {
-  background: #ff5252;
-}
-
-/* 装备分类 */
-.equipment-category {
-  margin-bottom: 20px;
-}
-
-.equipment-category:last-child {
-  margin-bottom: 0;
-}
-
-.equipment-category ul {
-  max-height: 100px;
-}
-
-.equipment-category li {
-  border-left-color: #4ecdc4;
-}
 
 /* 按钮样式 */
 button {
@@ -820,4 +727,361 @@ select:focus {
 .crop-cancel:hover {
   background: #ff5252;
   box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
+/* ========== 职业与背包模块 ========== */
+.profession-backpack-container {
+  display: flex;
+  gap: 20px;
+  grid-column: 1 / -1;
+}
+
+.profession-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.backpack-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.profession-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.profession-name-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profession-name-row label {
+  color: #00ff88;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.profession-name-input {
+  padding: 8px 12px;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 1em;
+  transition: all 0.3s ease;
+}
+
+.profession-name-input:focus {
+  outline: none;
+  background: rgba(0, 255, 136, 0.2);
+  border-color: #00ff88;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+.profession-adjectives {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adjective-row {
+  display: flex;
+}
+
+.adjective-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+.adjective-input:focus {
+  outline: none;
+  background: rgba(0, 255, 136, 0.15);
+  border-color: #00ff88;
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.25);
+}
+
+.backpack-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.backpack-textarea {
+  flex: 1;
+  padding: 12px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 5px;
+  color: #fff;
+  font-family: 'Arial', sans-serif;
+  font-size: 0.95em;
+  resize: none;
+  transition: all 0.3s ease;
+  min-height: 200px;
+}
+
+.backpack-textarea:focus {
+  outline: none;
+  background: rgba(0, 255, 136, 0.15);
+  border-color: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.backpack-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ========== 技能形容词与名词模块 ========== */
+.skills-nouns-container {
+  display: flex;
+  gap: 20px;
+  grid-column: 1 / -1;
+}
+
+.skills-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nouns-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  flex: 1;
+}
+
+.nouns-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  flex: 1;
+}
+
+.skill-item {
+  display: flex;
+}
+
+.skill-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+.skill-input:focus {
+  outline: none;
+  background: rgba(0, 255, 136, 0.15);
+  border-color: #00ff88;
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.25);
+}
+
+.noun-item {
+  display: flex;
+}
+
+.noun-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+.noun-input:focus {
+  outline: none;
+  background: rgba(0, 255, 136, 0.15);
+  border-color: #00ff88;
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.25);
+}
+
+/* ========== 背景模块 ========== */
+.background-section {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+}
+
+.background-content {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+}
+
+.background-text-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.background-textarea {
+  flex: 1;
+  padding: 12px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 5px;
+  color: #fff;
+  font-family: 'Arial', sans-serif;
+  font-size: 0.95em;
+  resize: none;
+  transition: all 0.3s ease;
+  min-height: 250px;
+}
+
+.background-textarea:focus {
+  outline: none;
+  background: rgba(0, 255, 136, 0.15);
+  border-color: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.background-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.background-image-container {
+  flex: 0 0 25%;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.background-image-box {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  min-height: 250px;
+}
+
+.background-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.background-image-placeholder {
+  color: #ddd;
+  font-size: 0.9em;
+  text-align: center;
+  padding: 20px;
+}
+
+/* 背景图像裁剪模态框 */
+.background-cropper-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.background-cropper-container {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.background-cropper-preview {
+  width: 400px;
+  height: 600px;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  cursor: move;
+}
+
+.background-cropper-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.background-crop-box {
+  position: absolute;
+  border: 2px solid #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  cursor: move;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.background-crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #00ff88;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+}
+
+.background-crop-handle-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nwse-resize;
+}
+
+.background-crop-handle-ne {
+  top: -6px;
+  right: -6px;
+  cursor: nesw-resize;
+}
+
+.background-crop-handle-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: nesw-resize;
+}
+
+.background-crop-handle-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+}
+
+.background-cropper-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }

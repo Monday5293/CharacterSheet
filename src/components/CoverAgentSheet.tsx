@@ -34,6 +34,15 @@ const CovertAgentSheet: React.FC = () => {
       blue: 0,
       green: 0
     },
+    profession: {
+      name: '',
+      adjectives: ['', '', '', '', '']
+    },
+    backpack: '',
+    skillAdjectives: Array(10).fill(''),
+    nouns: Array(10).fill(''),
+    background: '',
+    backgroundImage: '',
     health: {
       current: 10,
       max: 10,
@@ -67,6 +76,19 @@ const CovertAgentSheet: React.FC = () => {
   const [draggingHandle, setDraggingHandle] = useState<'move' | 'nw' | 'ne' | 'sw' | 'se' | null>(null)
   const ASPECT_RATIO = 9 / 16
   const MIN_CROP_SIZE = 40
+
+  // 背景图像处理
+  const backgroundFileInputRef = useRef<HTMLInputElement | null>(null)
+  const [showBackgroundCropper, setShowBackgroundCropper] = useState(false)
+  const [tempBackgroundImageUrl, setTempBackgroundImageUrl] = useState('')
+  const [backgroundCropRect, setBackgroundCropRect] = useState({ x: 0, y: 0, width: 100, height: 150 })
+  const [backgroundIsDragging, setBackgroundIsDragging] = useState(false)
+  const [backgroundDragStart, setBackgroundDragStart] = useState({ x: 0, y: 0 })
+  const backgroundCropperRef = useRef<HTMLDivElement | null>(null)
+  const backgroundStartRectRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null)
+  const [backgroundDraggingHandle, setBackgroundDraggingHandle] = useState<'move' | 'nw' | 'ne' | 'sw' | 'se' | null>(null)
+  const BACKGROUND_ASPECT_RATIO = 3 / 4
+  const BACKGROUND_MIN_CROP_SIZE = 40
 
   // 追踪最高醉意值和独立生命值
   const [maxIntoxication, setMaxIntoxication] = useState(0)
@@ -281,11 +303,173 @@ const CovertAgentSheet: React.FC = () => {
     setTempImageUrl('')
   }
 
-  const [newSpecialty, setNewSpecialty] = useState('')
-  const [newWeapon, setNewWeapon] = useState('')
-  const [newGadget, setNewGadget] = useState('')
-  const [newContact, setNewContact] = useState('')
-  const [newAlias, setNewAlias] = useState('')
+  // 背景图像处理
+  const handleBackgroundImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      setTempBackgroundImageUrl(result)
+      setShowBackgroundCropper(true)
+      // 初始化裁剪框
+      const img = new Image()
+      img.onload = () => {
+        const previewWidth = 400
+        const previewHeight = 600
+        let cropWidth = previewWidth * 0.8
+        let cropHeight = cropWidth / BACKGROUND_ASPECT_RATIO
+      
+        if (cropHeight > previewHeight * 0.8) {
+          cropHeight = previewHeight * 0.8
+          cropWidth = cropHeight * BACKGROUND_ASPECT_RATIO
+        }
+      
+        setBackgroundCropRect({
+          x: (previewWidth - cropWidth) / 2,
+          y: (previewHeight - cropHeight) / 2,
+          width: cropWidth,
+          height: cropHeight
+        })
+      }
+      img.src = result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const openBackgroundDialog = () => {
+    if (backgroundFileInputRef.current) backgroundFileInputRef.current.click()
+  }
+
+  const handleBackgroundCropStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setBackgroundIsDragging(true)
+    setBackgroundDraggingHandle('move')
+    setBackgroundDragStart({ x: e.clientX, y: e.clientY })
+    backgroundStartRectRef.current = { ...backgroundCropRect }
+  }
+
+  const handleBackgroundCropStartHandle = (e: React.MouseEvent, handle: 'nw' | 'ne' | 'sw' | 'se') => {
+    e.preventDefault()
+    e.stopPropagation()
+    setBackgroundIsDragging(true)
+    setBackgroundDraggingHandle(handle)
+    setBackgroundDragStart({ x: e.clientX, y: e.clientY })
+    backgroundStartRectRef.current = { ...backgroundCropRect }
+  }
+
+  const handleBackgroundCropMove = (e: React.MouseEvent) => {
+    if (!backgroundIsDragging || !backgroundCropperRef.current) return
+    const deltaX = e.clientX - backgroundDragStart.x
+    const deltaY = e.clientY - backgroundDragStart.y
+    const container = backgroundCropperRef.current.getBoundingClientRect()
+    const containerWidth = container.width
+    const containerHeight = container.height
+
+    const start = backgroundStartRectRef.current ?? backgroundCropRect
+
+    if (backgroundDraggingHandle === 'move') {
+      const newX = Math.max(0, Math.min(start.x + deltaX, containerWidth - start.width))
+      const newY = Math.max(0, Math.min(start.y + deltaY, containerHeight - start.height))
+      setBackgroundCropRect({ ...start, x: newX, y: newY })
+    } else if (backgroundDraggingHandle) {
+      let newX = start.x
+      let newY = start.y
+      let newWidth = start.width
+      let newHeight = start.height
+
+      if (backgroundDraggingHandle === 'nw') {
+        newWidth = start.width - deltaX
+        newHeight = start.height - deltaY
+      } else if (backgroundDraggingHandle === 'ne') {
+        newWidth = start.width + deltaX
+        newHeight = start.height - deltaY
+      } else if (backgroundDraggingHandle === 'sw') {
+        newWidth = start.width - deltaX
+        newHeight = start.height + deltaY
+      } else if (backgroundDraggingHandle === 'se') {
+        newWidth = start.width + deltaX
+        newHeight = start.height + deltaY
+      }
+
+      newWidth = Math.max(BACKGROUND_MIN_CROP_SIZE, newWidth)
+      newHeight = newWidth / BACKGROUND_ASPECT_RATIO
+
+      if (backgroundDraggingHandle === 'nw') {
+        newX = start.x + (start.width - newWidth)
+        newY = start.y + (start.height - newHeight)
+      } else if (backgroundDraggingHandle === 'ne') {
+        newX = start.x
+        newY = start.y + (start.height - newHeight)
+      } else if (backgroundDraggingHandle === 'sw') {
+        newX = start.x + (start.width - newWidth)
+        newY = start.y
+      } else if (backgroundDraggingHandle === 'se') {
+        newX = start.x
+        newY = start.y
+      }
+
+      if (newX < 0) newX = 0
+      if (newY < 0) newY = 0
+      if (newX + newWidth > containerWidth) {
+        newWidth = containerWidth - newX
+        newWidth = Math.max(BACKGROUND_MIN_CROP_SIZE, newWidth)
+        newHeight = newWidth / BACKGROUND_ASPECT_RATIO
+      }
+      if (newY + newHeight > containerHeight) {
+        newHeight = containerHeight - newY
+        newHeight = Math.max(BACKGROUND_MIN_CROP_SIZE / BACKGROUND_ASPECT_RATIO, newHeight)
+        newWidth = newHeight * BACKGROUND_ASPECT_RATIO
+      }
+
+      setBackgroundCropRect({ x: newX, y: newY, width: newWidth, height: newHeight })
+    }
+  }
+
+  const handleBackgroundCropEnd = () => {
+    setBackgroundIsDragging(false)
+    setBackgroundDraggingHandle(null)
+  }
+
+  const confirmBackgroundCrop = () => {
+    if (!tempBackgroundImageUrl) return
+    
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const scaleX = img.width / (backgroundCropperRef.current?.offsetWidth || 200)
+      const scaleY = img.height / (backgroundCropperRef.current?.offsetHeight || 300)
+      
+      canvas.width = backgroundCropRect.width * scaleX
+      canvas.height = backgroundCropRect.height * scaleY
+      
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(
+          img,
+          backgroundCropRect.x * scaleX,
+          backgroundCropRect.y * scaleY,
+          backgroundCropRect.width * scaleX,
+          backgroundCropRect.height * scaleY,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        )
+      }
+      
+      setAgent(prev => ({ ...prev, backgroundImage: canvas.toDataURL() }))
+      setShowBackgroundCropper(false)
+      setTempBackgroundImageUrl('')
+    }
+    img.src = tempBackgroundImageUrl
+  }
+
+  const cancelBackgroundCrop = () => {
+    setShowBackgroundCropper(false)
+    setTempBackgroundImageUrl('')
+  }
 
   // 社会属性处理函数
   const handleAttributeChange = (attribute: keyof CovertAgent['socialAttributes'], value: number) => {
@@ -296,59 +480,6 @@ const CovertAgentSheet: React.FC = () => {
         [attribute]: Math.max(0, Math.min(10, value))
       }
     }))
-  }
-
-
-  // 健康状况处理
-  const handleHealthChange = (field: keyof CovertAgent['health'], value: number | string[]) => {
-    setAgent(prev => ({
-      ...prev,
-      health: {
-        ...prev.health,
-        [field]: value
-      }
-    }))
-  }
-
-  // 添加项目函数
-  const addItem = <T extends keyof CovertAgent['equipment']>(
-    category: T, 
-    item: string, 
-    setter: React.Dispatch<React.SetStateAction<string>>
-  ) => {
-    if (item.trim()) {
-      setAgent(prev => ({
-        ...prev,
-        equipment: {
-          ...prev.equipment,
-          [category]: [...prev.equipment[category], item.trim()]
-        }
-      }))
-      setter('')
-    }
-  }
-
-  const addSpecialty = () => {
-    if (newSpecialty.trim()) {
-      setAgent(prev => ({
-        ...prev,
-        specialties: [...prev.specialties, newSpecialty.trim()]
-      }))
-      setNewSpecialty('')
-    }
-  }
-
-  const addAlias = () => {
-    if (newAlias.trim()) {
-      setAgent(prev => ({
-        ...prev,
-        secrets: {
-          ...prev.secrets,
-          knownAliases: [...prev.secrets.knownAliases, newAlias.trim()]
-        }
-      }))
-      setNewAlias('')
-    }
   }
 
   return (
@@ -632,193 +763,194 @@ const CovertAgentSheet: React.FC = () => {
         </div>
       </div>
 
-          {/* 新增：酒类展示，横跨两列 */}
-          <div className="section wine-section">
-            <h2>🍶 酒</h2>
-            <div className="bottle-grid">
-              {bottles.map((b, idx) => (
-                <div key={idx} className="bottle-item">
-                  <div className="bottle-image" onClick={() => openBottleDialog(idx)} role="button" aria-label={`选择${b.name}图片`}>
-                    {b.image ? (
-                      <img src={b.image} alt={b.name} />
-                    ) : (
-                      <div className="bottle-placeholder">点击选择图片</div>
-                    )}
-                  </div>
-                  <div className="bottle-name">{b.name}</div>
+      {/* 新增：酒类展示，横跨两列 */}
+      <div className="section wine-section">
+        <h2>🍶 酒</h2>
+        <div className="bottle-grid">
+          {bottles.map((b, idx) => (
+            <div key={idx} className="bottle-item">
+              <div className="bottle-image" onClick={() => openBottleDialog(idx)} role="button" aria-label={`选择${b.name}图片`}>
+                {b.image ? (
+                  <img src={b.image} alt={b.name} />
+                ) : (
+                  <div className="bottle-placeholder">点击选择图片</div>
+                )}
+              </div>
+              <div className="bottle-name">{b.name}</div>
+            </div>
+          ))}
+        </div>
+        <input ref={bottleFileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBottleSelect} />
+      </div>
+
+      {/* 职业与背包 - 水平排列 */}
+      <div className="profession-backpack-container">
+        {/* 职业模块 */}
+        <div className="section profession-section">
+          <h2>💼 职业</h2>
+          <div className="profession-content">
+            <div className="profession-name-row">
+              <label>职业名称</label>
+              <input
+                type="text"
+                className="profession-name-input"
+                placeholder="输入职业名称"
+                value={agent.profession.name}
+                onChange={(e) => setAgent(prev => ({
+                  ...prev,
+                  profession: { ...prev.profession, name: e.target.value }
+                }))}
+              />
+            </div>
+            <div className="profession-adjectives">
+              {agent.profession.adjectives.map((adj, idx) => (
+                <div key={idx} className="adjective-row">
+                  <input
+                    type="text"
+                    className="adjective-input"
+                    placeholder={`形容词 ${idx + 1}`}
+                    value={adj}
+                    onChange={(e) => setAgent(prev => ({
+                      ...prev,
+                      profession: {
+                        ...prev.profession,
+                        adjectives: prev.profession.adjectives.map((a, i) => i === idx ? e.target.value : a)
+                      }
+                    }))}
+                  />
                 </div>
               ))}
             </div>
-            <input ref={bottleFileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBottleSelect} />
+          </div>
+        </div>
+
+        {/* 背包模块 */}
+        <div className="section backpack-section">
+          <h2>🎒 背包</h2>
+          <div className="backpack-content">
+            <textarea
+              className="backpack-textarea"
+              placeholder="手动填写背包内容"
+              value={agent.backpack}
+              onChange={(e) => setAgent(prev => ({
+                ...prev,
+                backpack: e.target.value
+              }))}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 技能形容词与名词模块 - 水平排列 */}
+      <div className="skills-nouns-container">
+        {/* 技能形容词模块 */}
+        <div className="section skills-section">
+          <h2>🎯 技能</h2>
+          <div className="skills-grid">
+            {agent.skillAdjectives.map((skill, idx) => (
+              <div key={idx} className="skill-item">
+                <input
+                  type="text"
+                  className="skill-input"
+                  placeholder={`技能 ${idx + 1}`}
+                  value={skill}
+                  onChange={(e) => setAgent(prev => ({
+                    ...prev,
+                    skillAdjectives: prev.skillAdjectives.map((s, i) => i === idx ? e.target.value : s)
+                  }))}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 名词模块 */}
+        <div className="section nouns-section">
+          <h2>📝 名词</h2>
+          <div className="nouns-grid">
+            {agent.nouns.map((noun, idx) => (
+              <div key={idx} className="noun-item">
+                <input
+                  type="text"
+                  className="noun-input"
+                  placeholder={`名词 ${idx + 1}`}
+                  value={noun}
+                  onChange={(e) => setAgent(prev => ({
+                    ...prev,
+                    nouns: prev.nouns.map((n, i) => i === idx ? e.target.value : n)
+                  }))}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 背景模块 - 占据整个宽度 */}
+      <div className="section background-section">
+        <h2>🎭 背景</h2>
+        <div className="background-content">
+          {/* 左侧：背景文本区域 */}
+          <div className="background-text-area">
+            <textarea
+              className="background-textarea"
+              placeholder="手动填写背景内容"
+              value={agent.background}
+              onChange={(e) => setAgent(prev => ({
+                ...prev,
+                background: e.target.value
+              }))}
+            />
           </div>
 
-      {/* 健康状况 */}
-      <div className="section health">
-        <h2>❤️ 健康状况</h2>
-        <div className="health-grid">
-          <div className="health-item">
-            <label>生命值:</label>
-            <div className="health-controls">
-              <div className="number-with-controls">
-                <input 
-                  type="number" 
-                  className="numeric-input"
-                  value={agent.health.current}
-                  onChange={(e) => handleHealthChange('current', parseInt(e.target.value) || 0)}
-                  min="0"
-                  max={agent.health.max}
-                />
-                <div className="token-controls">
-                  <button onClick={() => handleHealthChange('current', Math.max(0, agent.health.current - 1))}>-</button>
-                  <button onClick={() => handleHealthChange('current', Math.min(agent.health.max, agent.health.current + 1))}>+</button>
+          {/* 右侧：背景图像框 */}
+          <div className="background-image-container">
+            {showBackgroundCropper ? (
+              <div className="background-cropper-modal">
+                <div className="background-cropper-container">
+                  <div 
+                    className="background-cropper-preview"
+                    ref={backgroundCropperRef}
+                    onMouseMove={handleBackgroundCropMove}
+                    onMouseUp={handleBackgroundCropEnd}
+                    onMouseLeave={handleBackgroundCropEnd}
+                  >
+                    <img src={tempBackgroundImageUrl} alt="background crop" className="background-cropper-image" />
+                    <div
+                      className="background-crop-box"
+                      style={{
+                        left: `${backgroundCropRect.x}px`,
+                        top: `${backgroundCropRect.y}px`,
+                        width: `${backgroundCropRect.width}px`,
+                        height: `${backgroundCropRect.height}px`
+                      }}
+                      onMouseDown={handleBackgroundCropStart}
+                    >
+                      <div className="background-crop-handle background-crop-handle-nw" onMouseDown={(e) => handleBackgroundCropStartHandle(e, 'nw')}></div>
+                      <div className="background-crop-handle background-crop-handle-ne" onMouseDown={(e) => handleBackgroundCropStartHandle(e, 'ne')}></div>
+                      <div className="background-crop-handle background-crop-handle-sw" onMouseDown={(e) => handleBackgroundCropStartHandle(e, 'sw')}></div>
+                      <div className="background-crop-handle background-crop-handle-se" onMouseDown={(e) => handleBackgroundCropStartHandle(e, 'se')}></div>
+                    </div>
+                  </div>
+                  <div className="background-cropper-buttons">
+                    <button onClick={confirmBackgroundCrop} className="crop-confirm">确定</button>
+                    <button onClick={cancelBackgroundCrop} className="crop-cancel">取消</button>
+                  </div>
                 </div>
               </div>
-              <span>/ {agent.health.max}</span>
-            </div>
+            ) : (
+              <>
+                <div className="background-image-box" onClick={openBackgroundDialog} role="button" aria-label="上传背景图像">
+                  {agent.backgroundImage ? (
+                    <img src={agent.backgroundImage} alt="background" />
+                  ) : (
+                    <div className="background-image-placeholder">点击上传背景图像</div>
+                  )}
+                </div>
+                <input ref={backgroundFileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBackgroundImageSelect} />
+              </>
+            )}
           </div>
-          <div className="health-item">
-            <label>压力等级:</label>
-            <div className="number-with-controls">
-              <input 
-                type="number" 
-                className="numeric-input"
-                value={agent.health.stress}
-                onChange={(e) => handleHealthChange('stress', parseInt(e.target.value) || 0)}
-                min="0"
-                max="10"
-              />
-              <div className="token-controls">
-                <button onClick={() => handleHealthChange('stress', Math.max(0, agent.health.stress - 1))}>-</button>
-                <button onClick={() => handleHealthChange('stress', Math.min(10, agent.health.stress + 1))}>+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 技能专长 */}
-      <div className="section specialties">
-        <h2>🎯 技能专长</h2>
-        <div className="input-row">
-          <input 
-            type="text" 
-            value={newSpecialty}
-            onChange={(e) => setNewSpecialty(e.target.value)}
-            placeholder="输入新专长"
-            onKeyPress={(e) => e.key === 'Enter' && addSpecialty()}
-          />
-          <button onClick={addSpecialty}>添加专长</button>
-        </div>
-        <ul className="specialty-list">
-          {agent.specialties.map((specialty, index) => (
-            <li key={index}>
-              <span>{specialty}</span>
-              <button 
-                onClick={() => setAgent(prev => ({
-                  ...prev,
-                  specialties: prev.specialties.filter((_, i) => i !== index)
-                }))}
-              >×</button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 装备管理 */}
-      <div className="section equipment">
-        <h2>🔧 装备与资源</h2>
-        
-        <div className="equipment-category">
-          <h3>武器</h3>
-          <div className="input-row">
-            <input 
-              type="text" 
-              value={newWeapon}
-              onChange={(e) => setNewWeapon(e.target.value)}
-              placeholder="输入新武器"
-              onKeyPress={(e) => e.key === 'Enter' && addItem('weapons', newWeapon, setNewWeapon)}
-            />
-            <button onClick={() => addItem('weapons', newWeapon, setNewWeapon)}>添加</button>
-          </div>
-          <ul>
-            {agent.equipment.weapons.map((weapon, index) => (
-              <li key={index}>{weapon}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="equipment-category">
-          <h3>装备</h3>
-          <div className="input-row">
-            <input 
-              type="text" 
-              value={newGadget}
-              onChange={(e) => setNewGadget(e.target.value)}
-              placeholder="输入新装备"
-              onKeyPress={(e) => e.key === 'Enter' && addItem('gadgets', newGadget, setNewGadget)}
-            />
-            <button onClick={() => addItem('gadgets', newGadget, setNewGadget)}>添加</button>
-          </div>
-          <ul>
-            {agent.equipment.gadgets.map((gadget, index) => (
-              <li key={index}>{gadget}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="equipment-category">
-          <h3>联系人</h3>
-          <div className="input-row">
-            <input 
-              type="text" 
-              value={newContact}
-              onChange={(e) => setNewContact(e.target.value)}
-              placeholder="输入新联系人"
-              onKeyPress={(e) => e.key === 'Enter' && addItem('contacts', newContact, setNewContact)}
-            />
-            <button onClick={() => addItem('contacts', newContact, setNewContact)}>添加</button>
-          </div>
-          <ul>
-            {agent.equipment.contacts.map((contact, index) => (
-              <li key={index}>{contact}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* 秘密信息 */}
-      <div className="section secrets">
-        <h2>🔒 秘密档案</h2>
-        <div className="input-group">
-          <label>伪装身份:</label>
-          <input 
-            type="text" 
-            value={agent.secrets.coverIdentity}
-            onChange={(e) => setAgent(prev => ({
-              ...prev,
-              secrets: {...prev.secrets, coverIdentity: e.target.value}
-            }))}
-            placeholder="输入伪装身份"
-          />
-        </div>
-        
-        <div className="input-group">
-          <label>已知化名:</label>
-          <div className="input-row">
-            <input 
-              type="text" 
-              value={newAlias}
-              onChange={(e) => setNewAlias(e.target.value)}
-              placeholder="输入新化名"
-              onKeyPress={(e) => e.key === 'Enter' && addAlias()}
-            />
-            <button onClick={addAlias}>添加</button>
-          </div>
-          <ul>
-            {agent.secrets.knownAliases.map((alias, index) => (
-              <li key={index}>{alias}</li>
-            ))}
-          </ul>
         </div>
       </div>
     </div>
