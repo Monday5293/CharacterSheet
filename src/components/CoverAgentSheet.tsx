@@ -944,7 +944,7 @@ const CovertAgentSheet: React.FC = () => {
                   {agent.backgroundImage ? (
                     <img src={agent.backgroundImage} alt="background" />
                   ) : (
-                    <div className="background-image-placeholder">点击上传背景图像</div>
+                    <div className="background-image-placeholder">与你最适配的酒，会是....</div>
                   )}
                 </div>
                 <input ref={backgroundFileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleBackgroundImageSelect} />
