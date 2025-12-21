@@ -1,10 +1,13 @@
 import * as React from 'react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { CovertAgent } from '../types/character'
 import '../styles/CoverAgentSheet.css'
+import html2pdf from 'html2pdf.js'
 
 const CovertAgentSheet: React.FC = () => {
-  const [agent, setAgent] = useState<CovertAgent>({
+  const STORAGE_KEY = 'covert-agent-data'
+
+  const defaultAgent: CovertAgent = {
     codename: '',
     realName: '',
     age: 0,
@@ -63,7 +66,99 @@ const CovertAgentSheet: React.FC = () => {
       weaknesses: [],
       objectives: []
     }
+  }
+
+  // 多角色卡管理 - 初始化从 localStorage 加载
+  const [agents, setAgents] = useState<{ [key: string]: CovertAgent }>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const data = JSON.parse(saved)
+        return data.agents || { 'default': defaultAgent }
+      }
+      return { 'default': defaultAgent }
+    } catch (e) {
+      console.error('Failed to load saved data:', e)
+      return { 'default': defaultAgent }
+    }
   })
+
+  const [currentAgentId, setCurrentAgentId] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const data = JSON.parse(saved)
+        return data.currentAgentId || 'default'
+      }
+      return 'default'
+    } catch {
+      return 'default'
+    }
+  })
+
+  const agent = agents[currentAgentId]
+
+  // 当 agents 或 currentAgentId 改变时，自动保存到 localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        agents,
+        currentAgentId
+      }))
+    } catch (e) {
+      console.error('Failed to save data:', e)
+    }
+  }, [agents, currentAgentId])
+
+  // 更新当前角色卡
+  const updateAgent = (updatedAgent: CovertAgent) => {
+    setAgents(prev => ({
+      ...prev,
+      [currentAgentId]: updatedAgent
+    }))
+  }
+
+  // 切换到不同的角色卡
+  const switchAgent = (agentId: string) => {
+    if (agentId in agents) {
+      setCurrentAgentId(agentId)
+      setShowCardSwitchMenu(false)
+    }
+  }
+
+  // 创建新角色卡
+  const createNewAgent = () => {
+    const newId = `agent-${Date.now()}`
+    setAgents(prev => ({
+      ...prev,
+      [newId]: {
+        ...defaultAgent,
+        codename: `特工-${Object.keys(prev).length + 1}`
+      }
+    }))
+    switchAgent(newId)
+  }
+
+  // 删除角色卡
+  const deleteAgent = (agentId: string) => {
+    if (Object.keys(agents).length === 1) {
+      alert('至少要保留一个角色卡')
+      return
+    }
+    const newAgents = { ...agents }
+    delete newAgents[agentId]
+    setAgents(newAgents)
+    
+    if (currentAgentId === agentId) {
+      const firstAgentId = Object.keys(newAgents)[0]
+      setCurrentAgentId(firstAgentId)
+    }
+  }
+
+  // setAgent包装器 - 保持向后兼容
+  const setAgent = (updateFn: (prev: CovertAgent) => CovertAgent) => {
+    updateAgent(updateFn(agent))
+  }
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [showAvatarCropper, setShowAvatarCropper] = useState(false)
@@ -91,8 +186,31 @@ const CovertAgentSheet: React.FC = () => {
   const BACKGROUND_MIN_CROP_SIZE = 40
 
   // 追踪最高醉意值和独立生命值
-  const [maxIntoxication, setMaxIntoxication] = useState(0)
-  const [currentHealth, setCurrentHealth] = useState(10)
+  const [maxIntoxication, setMaxIntoxication] = useState(() => {
+    try {
+      const saved = localStorage.getItem('covert-agent-maxIntoxication')
+      return saved ? parseInt(saved) : 0
+    } catch {
+      return 0
+    }
+  })
+  const [currentHealth, setCurrentHealth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('covert-agent-currentHealth')
+      return saved ? parseInt(saved) : 10
+    } catch {
+      return 10
+    }
+  })
+
+  // 保存 maxIntoxication 和 currentHealth
+  useEffect(() => {
+    localStorage.setItem('covert-agent-maxIntoxication', maxIntoxication.toString())
+  }, [maxIntoxication])
+
+  useEffect(() => {
+    localStorage.setItem('covert-agent-currentHealth', currentHealth.toString())
+  }, [currentHealth])
 
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0]
@@ -235,9 +353,26 @@ const CovertAgentSheet: React.FC = () => {
   }
 
   // 酒类展示（6 个方框）
-  const [bottles, setBottles] = useState(() =>
-    Array.from({ length: 6 }, (_, i) => ({ image: '', name: `酒${i + 1}` }))
-  )
+  const BOTTLES_STORAGE_KEY = 'covert-agent-bottles'
+  const [bottles, setBottles] = useState(() => {
+    try {
+      const saved = localStorage.getItem(BOTTLES_STORAGE_KEY)
+      return saved ? JSON.parse(saved) : Array.from({ length: 6 }, (_, i) => ({ image: '', name: `酒${i + 1}` }))
+    } catch (e) {
+      console.error('Failed to load bottles data:', e)
+      return Array.from({ length: 6 }, (_, i) => ({ image: '', name: `酒${i + 1}` }))
+    }
+  })
+
+  // 保存 bottles 到 localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(BOTTLES_STORAGE_KEY, JSON.stringify(bottles))
+    } catch (e) {
+      console.error('Failed to save bottles data:', e)
+    }
+  }, [bottles])
+
   const bottleFileInputRef = useRef<HTMLInputElement | null>(null)
   const [currentBottleIndex, setCurrentBottleIndex] = useState<number | null>(null)
 
@@ -471,6 +606,460 @@ const CovertAgentSheet: React.FC = () => {
     setTempBackgroundImageUrl('')
   }
 
+  // 导出功能相关 state
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [showPrintSubMenu, setShowPrintSubMenu] = useState(false)
+  const [showCardManageSubMenu, setShowCardManageSubMenu] = useState(false)
+  const [showCardSwitchMenu, setShowCardSwitchMenu] = useState(false)
+  const [showPrintPreview, setShowPrintPreview] = useState(false)
+  const sheetRef = useRef<HTMLDivElement | null>(null)
+
+  // 菜单延迟关闭的计时器
+  const printSubMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const cardManageSubMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const cardSwitchMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 处理打印子菜单的鼠标进入/离开
+  const handlePrintSubMenuEnter = () => {
+    if (printSubMenuTimeoutRef.current) {
+      clearTimeout(printSubMenuTimeoutRef.current)
+      printSubMenuTimeoutRef.current = null
+    }
+    setShowPrintSubMenu(true)
+  }
+
+  const handlePrintSubMenuLeave = () => {
+    printSubMenuTimeoutRef.current = setTimeout(() => {
+      setShowPrintSubMenu(false)
+    }, 200)
+  }
+
+  // 处理卡包管理子菜单的鼠标进入/离开
+  const handleCardManageSubMenuEnter = () => {
+    if (cardManageSubMenuTimeoutRef.current) {
+      clearTimeout(cardManageSubMenuTimeoutRef.current)
+      cardManageSubMenuTimeoutRef.current = null
+    }
+    setShowCardManageSubMenu(true)
+  }
+
+  const handleCardManageSubMenuLeave = () => {
+    cardManageSubMenuTimeoutRef.current = setTimeout(() => {
+      setShowCardManageSubMenu(false)
+    }, 200)
+  }
+
+  // 处理切换角色卡三级菜单的鼠标进入/离开
+  const handleCardSwitchMenuEnter = () => {
+    if (cardSwitchMenuTimeoutRef.current) {
+      clearTimeout(cardSwitchMenuTimeoutRef.current)
+      cardSwitchMenuTimeoutRef.current = null
+    }
+    setShowCardSwitchMenu(true)
+  }
+
+  const handleCardSwitchMenuLeave = () => {
+    cardSwitchMenuTimeoutRef.current = setTimeout(() => {
+      setShowCardSwitchMenu(false)
+    }, 200)
+  }
+
+  // 菜单容器进入时清除所有延迟
+  const handleMenuContainerEnter = () => {
+    if (printSubMenuTimeoutRef.current) {
+      clearTimeout(printSubMenuTimeoutRef.current)
+      printSubMenuTimeoutRef.current = null
+    }
+    if (cardManageSubMenuTimeoutRef.current) {
+      clearTimeout(cardManageSubMenuTimeoutRef.current)
+      cardManageSubMenuTimeoutRef.current = null
+    }
+    if (cardSwitchMenuTimeoutRef.current) {
+      clearTimeout(cardSwitchMenuTimeoutRef.current)
+      cardSwitchMenuTimeoutRef.current = null
+    }
+  }
+
+  // 导出为 JSON
+  const exportJSON = () => {
+    const dataToExport = {
+      agent,
+      bottles,
+      maxIntoxication,
+      currentHealth,
+      exportDate: new Date().toISOString()
+    }
+    const jsonString = JSON.stringify(dataToExport, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${agent.codename || 'character'}-${new Date().getTime()}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    setShowExportMenu(false)
+  }
+
+  // 导出为 HTML
+  const exportHTML = () => {
+    if (!sheetRef.current) return
+    
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${agent.codename || 'Character'} - 特工档案</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #0a0e27;
+      color: #fff;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 30px;
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+    h1, h2, h3 {
+      color: #00ff88;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #00ff88;
+      padding-bottom: 5px;
+    }
+    .section {
+      margin-bottom: 20px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .field {
+      flex: 1;
+      min-width: 200px;
+      margin-right: 10px;
+    }
+    .label {
+      color: #00ff88;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    .value {
+      color: #fff;
+      font-size: 1em;
+      margin-top: 3px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .grid-item {
+      padding: 8px;
+      background: rgba(0, 255, 136, 0.08);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 5px;
+    }
+    @media print {
+      body {
+        background: white;
+      }
+      .container {
+        background: white;
+        border: none;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🕵️ 特工档案 - ${agent.codename}</h1>
+    
+    <div class="section">
+      <h2>基本信息</h2>
+      <div class="row">
+        <div class="field">
+          <div class="label">代号</div>
+          <div class="value">${agent.codename}</div>
+        </div>
+        <div class="field">
+          <div class="label">玩家</div>
+          <div class="value">${agent.realName}</div>
+        </div>
+        <div class="field">
+          <div class="label">年龄</div>
+          <div class="value">${agent.age}</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <div class="label">性别</div>
+          <div class="value">${agent.gender}</div>
+        </div>
+        <div class="field">
+          <div class="label">出生地</div>
+          <div class="value">${agent.birthPlace}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>资源与生命值</h2>
+      <div class="row">
+        <div class="field">
+          <div class="label">初始黑市币</div>
+          <div class="value">${agent.initialBlackCoin}</div>
+        </div>
+        <div class="field">
+          <div class="label">剩余黑市币</div>
+          <div class="value">${agent.remainingBlackCoin}</div>
+        </div>
+        <div class="field">
+          <div class="label">当前醉意值</div>
+          <div class="value">${agent.currentIntoxication}</div>
+        </div>
+        <div class="field">
+          <div class="label">当前生命值</div>
+          <div class="value">${currentHealth}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🌟 社会属性</h2>
+      <div class="row">
+        <div class="field">
+          <div class="label">财富</div>
+          <div class="value">${agent.socialAttributes.wealth} - ${agent.socialAttributeDescriptions.wealth}</div>
+        </div>
+        <div class="field">
+          <div class="label">权力</div>
+          <div class="value">${agent.socialAttributes.power} - ${agent.socialAttributeDescriptions.power}</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <div class="label">声望</div>
+          <div class="value">${agent.socialAttributes.prestige} - ${agent.socialAttributeDescriptions.prestige}</div>
+        </div>
+        <div class="field">
+          <div class="label">人脉</div>
+          <div class="value">${agent.socialAttributes.network} - ${agent.socialAttributeDescriptions.network}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🥂 酒类代币</h2>
+      <div class="row">
+        <div class="field">
+          <div class="label">红</div>
+          <div class="value">${agent.alcoholTokens.red}</div>
+        </div>
+        <div class="field">
+          <div class="label">黄</div>
+          <div class="value">${agent.alcoholTokens.yellow}</div>
+        </div>
+        <div class="field">
+          <div class="label">蓝</div>
+          <div class="value">${agent.alcoholTokens.blue}</div>
+        </div>
+        <div class="field">
+          <div class="label">绿</div>
+          <div class="value">${agent.alcoholTokens.green}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>💼 职业</h2>
+      <div class="row">
+        <div class="field">
+          <div class="label">职业名称</div>
+          <div class="value">${agent.profession.name}</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <div class="label">形容词</div>
+          <div class="value">${agent.profession.adjectives.filter(a => a).join(', ')}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🎒 背包</h2>
+      <div class="value">${agent.backpack.replace(/\n/g, '<br>')}</div>
+    </div>
+
+    <div class="section">
+      <h2>🎯 技能</h2>
+      <div class="grid">
+        ${agent.skillAdjectives.map(skill => `<div class="grid-item">${skill || '(空)'}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📝 名词</h2>
+      <div class="grid">
+        ${agent.nouns.map(noun => `<div class="grid-item">${noun || '(空)'}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🎭 背景</h2>
+      <div class="value">${agent.background.replace(/\n/g, '<br>')}</div>
+      ${agent.backgroundImage ? `<img src="${agent.backgroundImage}" alt="背景图像" style="max-height: 300px;">` : ''}
+    </div>
+
+    <footer style="margin-top: 40px; text-align: center; color: #888; font-size: 0.9em;">
+      <p>导出时间: ${new Date().toLocaleString('zh-CN')}</p>
+    </footer>
+    
+    <!-- 隐藏的角色数据用于导入 -->
+    <textarea id="character-data" style="display: none;">${JSON.stringify({ agent, bottles, maxIntoxication, currentHealth }, null, 2)}</textarea>
+  </div>
+</body>
+</html>
+    `
+    
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${agent.codename || 'character'}-${new Date().getTime()}.html`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    setShowExportMenu(false)
+  }
+
+  // 导出为 PDF
+  const exportPDF = async () => {
+    if (!sheetRef.current) return
+    
+    const element = sheetRef.current
+    const opt = {
+      margin: 10,
+      filename: `${agent.codename || 'character'}-${new Date().getTime()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    }
+    
+    try {
+      html2pdf().set(opt).from(element).save()
+    } catch (error) {
+      console.error('PDF export failed:', error)
+      alert('PDF 导出失败，请重试')
+    }
+    setShowExportMenu(false)
+  }
+
+  // 打印预览
+  const handlePrintPreview = () => {
+    setShowPrintPreview(true)
+    setShowExportMenu(false)
+  }
+
+  // 从JSON导入
+  const importFromJSON = async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = (e: any) => {
+      const file = e.target.files[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = (event: any) => {
+        try {
+          const data = JSON.parse(event.target.result)
+          const importedAgent = data.agent || data
+          const newId = `agent-${Date.now()}`
+          setAgents(prev => ({
+            ...prev,
+            [newId]: { ...importedAgent }
+          }))
+          switchAgent(newId)
+          alert(`已成功导入角色卡: ${importedAgent.codename || '未命名'}`)
+        } catch (err) {
+          alert('JSON文件格式错误，请检查文件')
+          console.error(err)
+        }
+      }
+      reader.readAsText(file)
+    }
+    input.click()
+    setShowCardManageSubMenu(false)
+  }
+
+  // 从HTML导入（提取JSON数据）
+  const importFromHTML = async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.html'
+    input.onchange = (e: any) => {
+      const file = e.target.files[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = (event: any) => {
+        try {
+          const htmlContent = event.target.result
+          // 查找隐藏的JSON数据
+          const match = htmlContent.match(/<textarea[^>]*id="character-data"[^>]*>([\s\S]*?)<\/textarea>/)
+          if (!match) {
+            alert('HTML文件中未找到角色数据，请使用本程序导出的HTML文件')
+            return
+          }
+          const data = JSON.parse(match[1])
+          const importedAgent = data.agent || data
+          const newId = `agent-${Date.now()}`
+          setAgents(prev => ({
+            ...prev,
+            [newId]: { ...importedAgent }
+          }))
+          switchAgent(newId)
+          alert(`已成功导入角色卡: ${importedAgent.codename || '未命名'}`)
+        } catch (err) {
+          alert('HTML文件格式错误，请检查文件')
+          console.error(err)
+        }
+      }
+      reader.readAsText(file)
+    }
+    input.click()
+    setShowCardManageSubMenu(false)
+  }
+
   // 社会属性处理函数
   const handleAttributeChange = (attribute: keyof CovertAgent['socialAttributes'], value: number) => {
     setAgent(prev => ({
@@ -483,7 +1072,7 @@ const CovertAgentSheet: React.FC = () => {
   }
 
   return (
-    <div className="covert-agent-sheet">
+    <div className="covert-agent-sheet" ref={sheetRef}>
       {/* 特工基本信息 */}
       <div className="section agent-info">
         <h2>🕵️ 特工档案</h2>
@@ -702,8 +1291,9 @@ const CovertAgentSheet: React.FC = () => {
             const value = agent.socialAttributes[key]
             return (
               <div key={key} className="social-attribute-row">
-                <div className="attr-name">{getSocialAttributeLabel(key)}</div>
-                <div className="attr-description">
+                <div className="attr-label">{getSocialAttributeLabel(key)}</div>
+                <div className="attr-noun">
+                  <label>名词数量：</label>
                   <input 
                     type="text"
                     placeholder="填入对应名词"
@@ -717,16 +1307,19 @@ const CovertAgentSheet: React.FC = () => {
                     }))}
                   />
                 </div>
-                <div className="attr-controls">
-                  <button 
-                    onClick={() => handleAttributeChange(key, value - 1)}
-                    disabled={value <= 0}
-                  >-</button>
-                  <span className="attr-value">{value}</span>
-                  <button 
-                    onClick={() => handleAttributeChange(key, value + 1)}
-                    disabled={value >= 10}
-                  >+</button>
+                <div className="attr-level">
+                  <label>等级：</label>
+                  <div className="attr-controls">
+                    <button 
+                      onClick={() => handleAttributeChange(key, value - 1)}
+                      disabled={value <= 0}
+                    >-</button>
+                    <span className="attr-value">{value}</span>
+                    <button 
+                      onClick={() => handleAttributeChange(key, value + 1)}
+                      disabled={value >= 10}
+                    >+</button>
+                  </div>
                 </div>
               </div>
             )
@@ -953,6 +1546,195 @@ const CovertAgentSheet: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 悬浮导出按钮 */}
+      <div className="export-floating-button">
+        <button 
+          className="export-btn"
+          onClick={() => setShowExportMenu(!showExportMenu)}
+          title="打印/导出功能"
+        >
+          ⌘
+        </button>
+        
+        {showExportMenu && (
+          <div className="export-menu" onMouseEnter={handleMenuContainerEnter}>
+            <button 
+              className={`export-menu-item has-submenu ${showCardManageSubMenu ? 'active' : ''}`}
+              onMouseEnter={handleCardManageSubMenuEnter}
+              onMouseLeave={handleCardManageSubMenuLeave}
+            >
+              <span>卡包管理</span>
+              {showCardManageSubMenu && (
+                <div className="export-submenu" onMouseEnter={handleMenuContainerEnter} onMouseLeave={handleCardManageSubMenuLeave}>
+                  <button 
+                    className={`submenu-item has-submenu ${showCardSwitchMenu ? 'active' : ''}`}
+                    onMouseEnter={handleCardSwitchMenuEnter}
+                    onMouseLeave={handleCardSwitchMenuLeave}
+                  >
+                    <span>切换角色卡</span>
+                    {showCardSwitchMenu && (
+                      <div className="export-submenu card-switch-menu" onMouseEnter={handleMenuContainerEnter} onMouseLeave={handleCardSwitchMenuLeave}>
+                        <button 
+                          onClick={createNewAgent} 
+                          className="submenu-item new-card-btn"
+                          onMouseEnter={handleMenuContainerEnter}
+                          onMouseLeave={handleCardSwitchMenuLeave}
+                        >
+                          ➕ 新建角色卡
+                        </button>
+                        <div className="card-list-divider" onMouseEnter={handleMenuContainerEnter}></div>
+                        <div className="card-items-container" onMouseEnter={handleMenuContainerEnter} onMouseLeave={handleCardSwitchMenuLeave}>
+                          {Object.entries(agents).map(([id, agentData]) => (
+                            <button 
+                              key={id}
+                              onClick={() => switchAgent(id)}
+                              className={`submenu-item card-item ${currentAgentId === id ? 'active' : ''}`}
+                              onMouseEnter={handleMenuContainerEnter}
+                              onMouseLeave={handleCardSwitchMenuLeave}
+                            >
+                              <span>{agentData.codename || '未命名'}</span>
+                              {currentAgentId === id && <span className="active-indicator">✓</span>}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                  <button onClick={importFromJSON} className="submenu-item">
+                    📥 从JSON导入
+                  </button>
+                  <button onClick={importFromHTML} className="submenu-item">
+                    📥 从HTML导入
+                  </button>
+                </div>
+              )}
+            </button>
+            <button className="export-menu-item">
+              <span>存档管理</span>
+            </button>
+            <button 
+              className={`export-menu-item has-submenu ${showPrintSubMenu ? 'active' : ''}`}
+              onMouseEnter={handlePrintSubMenuEnter}
+              onMouseLeave={handlePrintSubMenuLeave}
+            >
+              <span>打印</span>
+              {showPrintSubMenu && (
+                <div className="export-submenu" onMouseEnter={handleMenuContainerEnter} onMouseLeave={handlePrintSubMenuLeave}>
+                  <button onClick={exportPDF} className="submenu-item">
+                    📑 导出 PDF
+                  </button>
+                  <button onClick={exportJSON} className="submenu-item">
+                    💾 导出 JSON
+                  </button>
+                  <button onClick={exportHTML} className="submenu-item">
+                    📄 导出 HTML
+                  </button>
+                  <button onClick={handlePrintPreview} className="submenu-item">
+                    👁️ 打印预览
+                  </button>
+                </div>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 打印预览模态框 */}
+      {showPrintPreview && (
+        <div className="print-preview-modal">
+          <div className="print-preview-container">
+            <div className="print-preview-header">
+              <h2>打印预览</h2>
+              <button 
+                className="close-btn"
+                onClick={() => setShowPrintPreview(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="print-preview-content">
+              <div className="print-preview-sheet">
+                <h1>🕵️ 特工档案 - {agent.codename}</h1>
+                
+                <div className="preview-section">
+                  <h2>基本信息</h2>
+                  <div className="preview-row">
+                    <div className="preview-field">
+                      <span className="preview-label">代号:</span>
+                      <span className="preview-value">{agent.codename}</span>
+                    </div>
+                    <div className="preview-field">
+                      <span className="preview-label">玩家:</span>
+                      <span className="preview-value">{agent.realName}</span>
+                    </div>
+                    <div className="preview-field">
+                      <span className="preview-label">年龄:</span>
+                      <span className="preview-value">{agent.age}</span>
+                    </div>
+                  </div>
+                  <div className="preview-row">
+                    <div className="preview-field">
+                      <span className="preview-label">性别:</span>
+                      <span className="preview-value">{agent.gender}</span>
+                    </div>
+                    <div className="preview-field">
+                      <span className="preview-label">出生地:</span>
+                      <span className="preview-value">{agent.birthPlace}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="preview-section">
+                  <h2>资源与生命值</h2>
+                  <div className="preview-row">
+                    <div className="preview-field">
+                      <span className="preview-label">初始黑市币:</span>
+                      <span className="preview-value">{agent.initialBlackCoin}</span>
+                    </div>
+                    <div className="preview-field">
+                      <span className="preview-label">剩余黑市币:</span>
+                      <span className="preview-value">{agent.remainingBlackCoin}</span>
+                    </div>
+                    <div className="preview-field">
+                      <span className="preview-label">当前醉意值:</span>
+                      <span className="preview-value">{agent.currentIntoxication}</span>
+                    </div>
+                    <div className="preview-field">
+                      <span className="preview-label">当前生命值:</span>
+                      <span className="preview-value">{currentHealth}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="preview-section">
+                  <h2>社会属性与技能</h2>
+                  <div className="preview-row">
+                    <div className="preview-field">
+                      <span className="preview-label">职业:</span>
+                      <span className="preview-value">{agent.profession.name}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="print-preview-footer">
+              <button 
+                className="btn-print"
+                onClick={() => window.print()}
+              >
+                🖨️ 打印
+              </button>
+              <button 
+                className="btn-close"
+                onClick={() => setShowPrintPreview(false)}
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
